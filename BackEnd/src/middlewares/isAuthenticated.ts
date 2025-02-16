@@ -1,33 +1,42 @@
-import { NextFunction, Request, Response } from "express";
+import {NextFunction, Request, Response} from 'express'
+import { verify } from 'jsonwebtoken'
 
-import { verify } from "jsonwebtoken";
-
-interface Payload {
-    sub: string
+interface Payload{
+  sub: string;
 }
 
-export function isAuthenticated(req: Request, res: Response, next: NextFunction) {
-    const authToken = req.headers.authorization;
-    if (!authToken) {
-        return res.status(401).end();
-    }
+export function isAuthenticated(
+  req: Request,
+  res: Response,
+  next: NextFunction
+){
 
-    const [, token] = authToken.split(" ")
+  // Receber o token
+  const authToken = req.headers.authorization;
 
-    try {
-        const { sub } = verify(
-            token,
-            process.env.JWT_secrets) as Payload;
+  if(!authToken){
+    return res.status(401).end();
+  }
 
-            //usando id do token.
-            req.user_id = sub;
+  const [, token] = authToken.split(" ")
 
-        return next();
+  
+  try{
+    //Validar esse token.
+    const { sub } = verify(
+      token,
+      process.env.JWT_SECRET
+    ) as Payload;
 
-    } catch (err) {
-        return res.status(401).end();
-    }
+    //Recuperar o id do token e colocar dentro de uma variavel user_id dentro do req.
+    req.user_id = sub;
+    
+    return next();
 
-    return next()
+  }catch(err){
+    return res.status(401).end();
+  }
+
+
 
 }
